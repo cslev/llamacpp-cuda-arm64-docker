@@ -1,12 +1,21 @@
 # llamacpp-cuda-arm64-docker
-This repo is to build your own llama.cpp Dockerimage with CUDA for ARM64 (DGX Spark). 
+This repository helps you build your own llama.cpp Docker image with CUDA support for ARM64 architectures (tested on NVIDIA DGX Spark).
 
+## Hardware Requirements
 
-In order to compile this Docker image, you have to have a fully working NVidia ARM64-based Linux system with all drivers, including CUDA too. It also means, you are actually able to 
-run llama.cpp or any AI workload efficiently on your system by offloading (most of) the processing to the GPU entirely.
+- **Architecture**: ARM64 (aarch64)
+- **GPU**: NVIDIA GPU with CUDA support (e.g., NVIDIA GB10 or similar)
+- **VRAM**: Minimum 8GB for small models (3B-7B parameters), 24GB+ recommended for larger models (30B+)
+- **Drivers**: NVIDIA driver version 535+ with CUDA 12.0+ support
+- **OS**: Linux (Ubuntu 22.04/24.04 recommended)
 
-## Best way to check
-The best way to check is to run certain commands and verify their outputs:
+## Prerequisites
+
+To compile this Docker image, you need a fully working NVIDIA ARM64-based Linux system with all drivers installed, including CUDA. This means you should already be able to run llama.cpp or any AI workload efficiently on your system by offloading most of the processing to the GPU.
+
+## Check Your System
+
+Verify your system is properly configured by running these commands:
 ```
 $ nvcc --version
 nvcc: NVIDIA (R) Cuda compiler driver
@@ -39,15 +48,19 @@ Wed Dec 31 01:42:54 2025
 ```
 
 ---
-# Compile llamacpp natively first (don't skip this step!)
-## Additional tools
+
+# Compile llama.cpp Natively First
+
+**Important**: This step is required to verify your build environment before creating the Docker image.
+
+## Install Additional Tools
 ```
 sudo apt install ccache cmake build-essential libcurl4-openssl-dev
 ```
 
-## Setup env variables
-Based on your driver versions, `cuda` in particular, set the environment variables for your user properly in your `~/.bashrc`.
-With Cuda v13.1, you should have something like this:
+## Setup Environment Variables
+
+Set the appropriate environment variables in your `~/.bashrc` based on your CUDA version. For CUDA 13.1, add the following:
 
 ```
 # CUDA 13.1 & GCC 12 Fix for ARM64
@@ -64,12 +77,14 @@ Then, relogin or load the file to make the changes effective.
 $ . ~/.bashrc
 ```
 
-## Clone repo (with submodue)
-Clone this repository with `llama.cpp` submodule.
+## Clone Repository (with Submodule)
+
+Clone this repository with the `llama.cpp` submodule:
 ```
 $ git clone --recurse-submodules https://github.com/cslev/llamacpp-cuda-arm64-docker.git
-``` 
-In case you cloned without the submodule, you can get it after checkout and changing the directory
+```
+
+If you cloned without the submodule, initialize it manually:
 ```
 $ cd llamacpp-cuda-arm64-docker
 $ git submodule update --init --recursive
@@ -82,34 +97,38 @@ $ cmake -B build -DGGML_CUDA=ON -DLLAMA_CURL=ON
 $ cmake --build build --config Release -j$(nproc)
 ```
 
-# Build Docker image
-Let's build our multistage docker image. This might take some time, at least the same as building llama.cpp natively.
+# Build Docker Image
+
+Build the multi-stage Docker image. This process may take 20-30 minutes, similar to the native compilation time.
 ```
 $ sudo docker build -t cslev/llamacpp-cuda-arm64 .
 ```
 
-# Get models
-Let's create a quick python environment, install `huggingface-hub` library, and pull some models. 
-We are going to test it with a small vision model so that vision capabilities/image uploads can be verified too.
+# Download Models
 
-## Install python venv
+Create a Python environment and install the `huggingface-hub` library to download models. In this example, we'll use a small vision model to test both text generation and image understanding capabilities.
+
+## Install Python Virtual Environment
 ```
 $ python3 -m venv .venv
 $ source .venv/bin/activate
 $ pip install -U "huggingface_hub"
 ```
-## Download a small vision model
-Download the model (GGUF) file first
+## Download a Small Vision Model
+
+First, download the model (GGUF) file:
 ```
-$ hf download ggml-org/Qwen2.5-VL-3B-Instruct-GGUF   Qwen2.5-VL-3B-Instruct-Q8_0.gguf  --local-dir ./models/
+$ hf download ggml-org/Qwen2.5-VL-3B-Instruct-GGUF Qwen2.5-VL-3B-Instruct-Q8_0.gguf --local-dir ./models/
 ```
-Download the mmproj file for Image input
+
+Then, download the mmproj file for image input:
 ```
 $ hf download ggml-org/Qwen2.5-VL-3B-Instruct-GGUF   mmproj-Qwen2.5-VL-3B-Instruct-Q8_0.gguf --local-dir ./models/
 ```
 
-# Edit models.ini
-Now, we need to edit the model description file `models.ini`, which can list all models that we downloaded and want to be served via llama.cpp.
+# Configure models.ini
+
+Edit the `models.ini` configuration file to register your downloaded models. This file maps each model to its associated files (including vision projectors for multimodal models).
 ```
 $ nano models/models.ini
 ```
@@ -122,22 +141,85 @@ mmproj = /models/mmproj-Qwen2.5-VL-3B-Instruct-Q8_0.gguf
 ```
 
 # Deploy
-Using our `docker-compose.yml` file, we can easily deploy our freshly build llamacpp container.
+
+Use the provided `docker-compose.yml` file to deploy the llama.cpp container:
 ```
 $ sudo docker-compose up
 ```
 
-After the stack is brought up, navigate to http://localhost:3000, and you can see have a full fledged llamacpp with CUDA support running on your ARM64 system within an isolated docker container.
+Once the stack is running, navigate to http://localhost:3000. You should see a fully-fledged llama.cpp instance with CUDA support running on your ARM64 system within an isolated Docker container.
 
 <p align="center">
   <img src="assets/llamacpp_running.png" alt="llama.cpp running with CUDA">
 </p>
 
 ---
-After selecting a model, let's wait a few seconds till it is fully loaded and the Images attachment entry becomes active. Select a random image, and ask our small vision language model to describe the image.
-As can be seen the performance is great, we got the response quite fast in seconds and the token/s metric also suggests the GPU is working effectively (in our DGX Spark - otherwise, with a CPU only approach it would be only ~10 token/s)
+
+## Testing Vision Capabilities
+
+After selecting a model, wait a few seconds until it is fully loaded and the **Images** attachment option becomes active. Upload an image and ask the vision language model to describe it.
+
+As shown below, the performance is excellent. The response is generated in seconds, and the token/s metric confirms the GPU is working effectively (~80-100 tokens/s on DGX Spark vs ~10 tokens/s CPU-only).
 
 <p align="center">
   <img src="assets/llamacpp_describe_image.png" alt="llama.cpp describing an image">
 </p>
+
+---
+
+# Troubleshooting
+
+## Context Size Errors
+
+If you encounter "context size exceeded" errors when processing multiple images:
+
+- **Issue**: Each image consumes ~1000-4000 tokens depending on resolution
+- **Solution**: Increase `--ctx-size` in `docker-compose.yml` (default: 32768)
+- **Example**: For 4+ images, use `--ctx-size 65536`
+- **STILL AN ISSUE**: the `--context-shift` argument supposed to shift out old context so you won't bump into errors in a chat when keep uploading new images or text. However, it is know (as of now) that llama.cpp and vision models have this issue of not shifting the context and you bump into an error. In those cases, you need to open a new chat.
+<p align="center">
+  <img src="assets/llamacpp_context-shift-error.png" alt="llama.cpp describing an image" width=500px>
+</p>
+
+## CUDA Not Detected
+
+If the GPU is not being utilized:
+
+1. Verify NVIDIA drivers: `nvidia-smi`
+2. Check CUDA installation: `nvcc --version`
+3. Ensure Docker has GPU access: `sudo docker run --rm --gpus all nvidia/cuda:12.0-base nvidia-smi`
+4. Verify the `deploy.resources.reservations.devices` section in `docker-compose.yml`
+
+## Model Loading Failures
+
+If models fail to load:
+
+- Verify file paths in `config/models.ini` match actual file locations in `./models/`
+- Ensure both `.gguf` and `.mmproj` files are downloaded for vision models
+- Check file permissions: models should be readable by the container
+
+## Performance Issues
+
+- **Low tokens/s**: Increase `--n-gpu-layers` (default: 99) or reduce `--parallel` if memory-constrained
+- **High memory usage**: Use lower quantization models (Q4_K_M instead of Q8_0)
+- **Flash attention**: Ensure `--flash-attn` is enabled for better performance
+
+---
+
+# Why This Repository?
+
+This repository exists because:
+
+1. **ARM64 + CUDA is niche**: Most llama.cpp Docker images target x86_64
+2. **Vision models need special handling**: The `models.ini` approach simplifies mmproj mapping
+3. **Reproducibility matters**: Pinning llama.cpp as a submodule ensures consistent builds
+4. **DGX Spark specifics**: Tuned for NVIDIA's ARM64 platform with optimal flags
+
+## Contributing
+
+Found a bug or have an improvement? PRs welcome!
+
+## License
+
+This repository follows the same license as llama.cpp. See [llama.cpp/LICENSE](llama.cpp/LICENSE) for details.
 
