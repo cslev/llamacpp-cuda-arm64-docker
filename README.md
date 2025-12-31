@@ -49,15 +49,6 @@ Wed Dec 31 01:42:54 2025
 
 ---
 
-# Compile llama.cpp Natively First
-
-**Important**: This step is required to verify your build environment before creating the Docker image.
-
-## Install Additional Tools
-```
-sudo apt install ccache cmake build-essential libcurl4-openssl-dev
-```
-
 ## Setup Environment Variables
 
 Set the appropriate environment variables in your `~/.bashrc` based on your CUDA version. For CUDA 13.1, add the following:
