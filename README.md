@@ -90,13 +90,6 @@ $ cd llamacpp-cuda-arm64-docker
 $ git submodule update --init --recursive
 ```
 
-## Compile llama.cpp
-```
-$ cd llama.cpp
-$ cmake -B build -DGGML_CUDA=ON -DLLAMA_CURL=ON
-$ cmake --build build --config Release -j$(nproc)
-```
-
 # Docker Image
 
 You have two options: pull the prebuilt image or build it yourself.
