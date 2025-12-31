@@ -97,11 +97,22 @@ $ cmake -B build -DGGML_CUDA=ON -DLLAMA_CURL=ON
 $ cmake --build build --config Release -j$(nproc)
 ```
 
-# Build Docker Image
+# Docker Image
 
-Build the multi-stage Docker image. This process may take 20-30 minutes, similar to the native compilation time.
+You have two options: pull the prebuilt image or build it yourself.
+
+## Option 1: Pull Prebuilt Image (Recommended)
+
+Pull the prebuilt image from Docker Hub:
 ```
-$ sudo docker build -t cslev/llamacpp-cuda-arm64 .
+$ sudo docker pull cslev/llamacpp-cuda-arm64:latest
+```
+
+## Option 2: Build From Source
+
+Build the multi-stage Docker image locally. This process may take 20-30 minutes, similar to the native compilation time.
+```
+$ sudo docker build -t cslev/llamacpp-cuda-arm64:latest .
 ```
 
 # Download Models
