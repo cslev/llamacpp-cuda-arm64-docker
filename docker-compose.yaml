@@ -1,0 +1,29 @@
+services:
+  llamacpp-server:
+    image: cslev/llamacpp-cuda-arm64:latest # The image you just compiled
+    container_name: llamacpp-server
+    restart: unless-stopped
+    ports:
+      - "3000:8033"
+    volumes:
+      # Maps your local models folder to /models in the container
+      - ./models:/models
+    environment:
+      - CUDA_VISIBLE_DEVICES=0
+    # Command optimized for ARM64 and Router Mode
+    command: >
+      --models-preset /models/models.ini
+      --host 0.0.0.0
+      --port 8033
+      --n-gpu-layers 99
+      --ctx-size 8192
+      --parallel 1
+      --flash-attn on
+      --context-shift
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
