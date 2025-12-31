@@ -221,5 +221,5 @@ Found a bug or have an improvement? PRs welcome!
 
 ## License
 
-This repository follows the same license as llama.cpp. See [llama.cpp/LICENSE](llama.cpp/LICENSE) for details.
+This repository follows the same license as llama.cpp. See [llama.cpp/LICENSE](https://github.com/ggml-org/llama.cpp/blob/c8a37980419e8b7f0193d058fb6f8f01b458cfca/LICENSE) for details.
 
