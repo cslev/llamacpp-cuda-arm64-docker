@@ -48,26 +48,6 @@ Wed Dec 31 01:42:54 2025
 ```
 
 ---
-
-## Setup Environment Variables
-
-Set the appropriate environment variables in your `~/.bashrc` based on your CUDA version. For CUDA 13.1, add the following:
-
-```
-# CUDA 13.1 & GCC 12 Fix for ARM64
-export PATH=/usr/local/cuda-13.1/bin:$PATH
-export LD_LIBRARY_PATH=/usr/local/cuda-13.1/lib64:$LD_LIBRARY_PATH
-export CUDA_PATH=/usr/local/cuda-13.1
-export CC=gcc-12
-export CXX=g++-12
-export CUDACXX=/usr/local/cuda-13.1/bin/nvcc
-```
-
-Then, relogin or load the file to make the changes effective.
-```
-$ . ~/.bashrc
-```
-
 ## Clone Repository (with Submodule)
 
 Clone this repository with the `llama.cpp` submodule:
@@ -151,13 +131,14 @@ Once the stack is running, navigate to http://localhost:3000. You should see a f
 ---
 
 ## Testing Vision Capabilities
+You can see from the file that the `command` section is quite optimized for the architecture as well as the use. No multiuser specific support and fixing everything to one GPU (as there is only one). Currently, other flags are optimized for vision language models.
 
 After selecting a model, wait a few seconds until it is fully loaded and the **Images** attachment option becomes active. Upload an image and ask the vision language model to describe it.
 
-As shown below, the performance is excellent. The response is generated in seconds, and the token/s metric confirms the GPU is working effectively (~80-100 tokens/s on DGX Spark vs ~10 tokens/s CPU-only).
+As shown below, the performance is excellent. The response is generated in seconds, and the token/s metric confirms the GPU is working effectively (50+ tokens/sec).
 
 <p align="center">
-  <img src="assets/llamacpp_describe_image.png" alt="llama.cpp describing an image">
+  <img src="assets/llamacpp_describe_image2.png" alt="llama.cpp describing an image">
 </p>
 
 ---
