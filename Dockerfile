@@ -1,5 +1,5 @@
 # Use NVIDIA's official CUDA devel image for ARM64
-FROM nvidia/cuda:12.2.0-devel-ubuntu22.04 AS build
+FROM nvidia/cuda:12.4.1-devel-ubuntu22.04 AS build
 
 # Install build dependencies
 RUN apt-get update && apt-get install -y \
@@ -14,6 +14,8 @@ WORKDIR /app
 # Copy the llama.cpp repository
 COPY llama.cpp/ .
 
+
+
 # Build llama.cpp with CUDA and cURL support from scratch
 # remove any existing build directory to ensure a clean build
 RUN rm -rf build && \
@@ -21,13 +23,16 @@ RUN rm -rf build && \
     -DGGML_CUDA=ON \
     -DLLAMA_CURL=ON \
     -DLLAMA_BUILD_EXAMPLES=OFF \
+ #   -DLLAMA_FATAL_WARNINGS=ON \
+ #   -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_LIBRARY_PATH=/usr/local/cuda/lib64/stubs \
     -DCMAKE_EXE_LINKER_FLAGS="-Wl,--allow-shlib-undefined" \
+ #   -DCMAKE_CUDA_ARCHITECTURES="72" \
     . && \
     cmake --build build --config Release -j $(nproc)
 
 # Final stage: Create a slim runtime image
-FROM nvidia/cuda:12.2.0-runtime-ubuntu22.04
+FROM nvidia/cuda:12.4.1-runtime-ubuntu22.04
 
 RUN apt-get update && apt-get install -y \
     libcurl4 \
